@@ -23,7 +23,12 @@ let print_emitter e =
 let tuple_of_node node =
   match node with
   | Node (a, b, c) -> a, b, c
-  | _ -> failwith "error"
+  | _ -> failwith "error node"
+
+let tuple_of_leaf leaf =
+  match leaf with
+  | Leaf (a, b) -> a, b
+  | _ -> failwith "error leaf"
 
 
 let print_pad i s =
@@ -43,60 +48,48 @@ let rec pprint tree i =
     print_pad i ("(" ^ (String.make 1 a)^ "  " ^ (string_of_float b) ^ ")");
     print_newline ()
 
-let find_min_freq emitter =
-  let rec find_min_freq_rec emitter (key1, min1) (key2, min2) =
-    match emitter with
-    | [] -> 
-      ((key1, min1), (key2, min2))
 
-    | (key, freq)::t when freq <= min1 ->
-        find_min_freq_rec t (key, freq) (key1, min1)
-
-    | (key, freq)::t when freq <= min2 ->
-        find_min_freq_rec t (key1, min1) (key, freq)
-
-    | h::t ->
-      find_min_freq_rec t (key1, min1) (key2, min2)
-
-  in
-
-  find_min_freq_rec emitter (' ', 1.0) (' ', 1.0)
+let init_tree_set u =
+  let rec add_tree_to_list l u =
+    match u with
+    | [] -> l
+    | (a, b)::t ->
+      add_tree_to_list ((Leaf (a, b))::l) t
+    in 
+    add_tree_to_list [] u
 
 
-let remove c l =
-  let test e = 
-    match e with
-    | (a, b) when a == c -> false
-    | _ -> true
-  in
-  List.filter test l
-
-
-let huffman emitter =
-  let rec huffman_rec emitter node =
-    match emitter with
-    | [] -> node
-    | h::t as l ->
-      let (key1, freq1), (_, _) = find_min_freq l in
-      let new_emitter = remove key1 l in (* remove min freq *)
-      let (freq2, _, _) = tuple_of_node node in
-      let new_node = Node (freq1 +. freq2, Leaf (key1, freq1), node) in
-      huffman_rec new_emitter new_node
-  in
+let combine_two t1 t2 =
+  match t1, t2 with
+  | Leaf (_, f1), Leaf (_, f2) -> Node (f1 +. f2, t1, t2)
+  | Leaf (_, f1), Node (f2, _, _) -> Node (f1 +. f2, t1, t2)
+  | _ -> failwith "error"
   
-  (* init the first sub-tree *)
-  let ((k1, f1), (k2, f2)) = find_min_freq emitter in
-  let em1 = remove k1 emitter in (* remove min freq 1 *)
-  let em2 = remove k2 em1 in (* remove min freq 2 *)
-  let n = Node (f1 +. f2, Leaf (k1, f1), Leaf (k2, f2)) in
 
-  (* build the rest of the tree *)
-  huffman_rec em2 n
+let compare_leaf l1 l2 =
+  let (_, f1) = tuple_of_leaf l1 in
+  let (_, f2) = tuple_of_leaf l2 in
+  int_of_float (f1 -. f2)
+
+
+let huffman u =
+  let rec combine_all ht l =
+    match l with
+    | [] -> ht
+    | h::t -> combine_all (combine_two h ht) t
+  in
+  let tree_set = init_tree_set u in
+  let sorted = List.sort compare_leaf tree_set in
+  let ht = combine_two (List.nth sorted 0) (List.nth sorted 1) in
+  combine_all ht (List.tl (List.tl sorted))
+
+
+let rec print_list = function 
+  [] -> ()
+  | (Leaf (c, f))::l -> print_float f ; print_string " " ; print_list l
+  | (Node (_, _, _))::l -> failwith "treeset must contains only Leaf"
 
 let _ =
   print_endline "description of the emitter :";
   print_emitter u;
-  print_endline "\nCode Tree \n";
-  pprint (huffman u) 0;
-
-
+  pprint (huffman u) 0
