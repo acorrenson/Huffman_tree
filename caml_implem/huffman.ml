@@ -1,15 +1,23 @@
+(* -----------------------------------------------*)
+(* ---- Information Theory - Huffman Trees -------*)
+(* -----------------------------------------------*)
+
 
 (* the description of an emitter u *)
 let u = [('a', 0.5); ('b', 0.2); ('c', 0.2); ('d', 0.1)]
 
 
-type codetree =
-  | Node of float * codetree * codetree
+(* typedef for Huffman Tree *)
+type htree =
+  | Node of float * htree * htree
   | Leaf of char * float
 
 
+(* -----------------------------------------------*)
+(* ---- Print the description of an emitter e ----*)
+(* -----------------------------------------------*)
+
 let print_emitter e =
-  (* print the description of an emitter *)
   let read (a, b) =
     
     print_char a;
@@ -20,16 +28,25 @@ let print_emitter e =
   List.iter read e
 
 
+(* ----------------------------------- *)
+(* ---- Conversion htree -> tuple ---- *)
+(* ----------------------------------- *)
+
 let tuple_of_node node =
   match node with
   | Node (a, b, c) -> a, b, c
   | _ -> failwith "error node"
+
 
 let tuple_of_leaf leaf =
   match leaf with
   | Leaf (a, b) -> a, b
   | _ -> failwith "error leaf"
 
+
+(* ----------------------------------- *)
+(* ---- Functions to print tree ------ *)
+(* ----------------------------------- *)
 
 let print_pad i s =
   let pad = String.make (i*2) ' ' in
@@ -48,6 +65,10 @@ let rec pprint tree i =
     print_pad i ("(" ^ (String.make 1 a)^ "  " ^ (string_of_float b) ^ ")");
     print_newline ()
 
+
+(* ------------------------------------------------ *)
+(* ---- Functions to construct Huffman Trees ------ *)
+(* ------------------------------------------------ *)
 
 let init_tree_set u =
   let rec add_tree_to_list l u =
@@ -84,12 +105,8 @@ let huffman u =
   combine_all ht (List.tl (List.tl sorted))
 
 
-let rec print_list = function 
-  [] -> ()
-  | (Leaf (c, f))::l -> print_float f ; print_string " " ; print_list l
-  | (Node (_, _, _))::l -> failwith "treeset must contains only Leaf"
-
 let _ =
   print_endline "description of the emitter :";
   print_emitter u;
+  print_endline "Optimized coding tree for the emitter :";
   pprint (huffman u) 0
