@@ -29,22 +29,6 @@ let print_emitter e =
 
 
 (* ----------------------------------- *)
-(* ---- Conversion htree -> tuple ---- *)
-(* ----------------------------------- *)
-
-let tuple_of_node node =
-  match node with
-  | Node (a, b, c) -> a, b, c
-  | _ -> failwith "error node"
-
-
-let tuple_of_leaf leaf =
-  match leaf with
-  | Leaf (a, b) -> a, b
-  | _ -> failwith "error leaf"
-
-
-(* ----------------------------------- *)
 (* ---- Functions to print tree ------ *)
 (* ----------------------------------- *)
 
@@ -84,26 +68,35 @@ let combine_two t1 t2 =
   match t1, t2 with
   | Leaf (_, f1), Leaf (_, f2) -> Node (f1 +. f2, t1, t2)
   | Leaf (_, f1), Node (f2, _, _) -> Node (f1 +. f2, t1, t2)
+  | Node (f1, _, _), Leaf (_, f2) -> Node (f1 +. f2, t1, t2)
   | _ -> failwith "error"
   
 
-let compare_leaf l1 l2 =
-  let (_, f1) = tuple_of_leaf l1 in
-  let (_, f2) = tuple_of_leaf l2 in
-  int_of_float (f1 -. f2)
+let compare_tree t1 t2 =
+  match t1, t2 with
+  | Node (a, b, c), Node (d, e, f) ->
+    int_of_float (a -. d)
+  | Node (a, b, c), Leaf (d, e) ->
+    int_of_float (a -. e)
+  | Leaf (a, b), Leaf (c, d) ->
+    int_of_float (b -. d)
+  | Leaf (a, b), Node (c, d, e) ->
+    int_of_float (b -. c)
 
 
 let huffman u =
-  let rec combine_all ht l =
+  let rec combine_all l =
     match l with
-    | [] -> ht
-    | h::t -> combine_all (combine_two h ht) t
+    | h::[] -> h
+    | _ as l ->
+      let sorted = List.sort compare_tree l in
+      let ht = combine_two (List.nth sorted 0) (List.nth sorted 1) in
+      let new_l = ht::(List.tl (List.tl sorted)) in
+      combine_all new_l
   in
   let tree_set = init_tree_set u in
-  let sorted = List.sort compare_leaf tree_set in
-  let ht = combine_two (List.nth sorted 0) (List.nth sorted 1) in
-  combine_all ht (List.tl (List.tl sorted))
-
+  let sorted = List.sort compare_tree tree_set in
+  combine_all sorted
 
 let _ =
   print_endline "description of the emitter :";
