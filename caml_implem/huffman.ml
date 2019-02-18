@@ -5,6 +5,24 @@
 
 (* the description of an emitter u *)
 let u = [('a', 0.5); ('b', 0.2); ('c', 0.2); ('d', 0.1)]
+let v = [
+  (' ', 2.);
+  ('e', 3.);
+  ('i', 1.);
+  ('n', 1.);
+  ('p', 1.);
+  ('t', 4.);
+  ('u', 1.);
+  ('x', 1.);
+  ]
+let w = [
+  ('a', 0.2);
+  ('b', 0.15);
+  ('c', 0.4);
+  ('d', 0.15);
+  ('e', 0.1);
+]
+
 
 
 (* typedef for Huffman Tree *)
@@ -66,23 +84,29 @@ let init_tree_set u =
 
 let combine_two t1 t2 =
   match t1, t2 with
-  | Leaf (_, f1), Leaf (_, f2) -> Node (f1 +. f2, t1, t2)
-  | Leaf (_, f1), Node (f2, _, _) -> Node (f1 +. f2, t1, t2)
-  | Node (f1, _, _), Leaf (_, f2) -> Node (f1 +. f2, t1, t2)
-  | _ -> failwith "error"
+  | Leaf (_, f1), Leaf (_, f2) -> Node (f1 +. f2, t2, t1)
+  | Leaf (_, f1), Node (f2, _, _) -> Node (f1 +. f2, t2, t1)
+  | Node (f1, _, _), Leaf (_, f2) -> Node (f1 +. f2, t2, t1)
+  | Node (f1, _, _), Node (f2, _, _) -> Node (f1 +. f2, t2, t1)
   
 
 let compare_tree t1 t2 =
   match t1, t2 with
   | Node (a, b, c), Node (d, e, f) ->
-    int_of_float (a -. d)
+    int_of_float (100. *. (a -. d))
   | Node (a, b, c), Leaf (d, e) ->
-    int_of_float (a -. e)
+    int_of_float (100. *. (a -. e))
   | Leaf (a, b), Leaf (c, d) ->
-    int_of_float (b -. d)
+    int_of_float (100. *. (b -. d))
   | Leaf (a, b), Node (c, d, e) ->
-    int_of_float (b -. c)
+    int_of_float (100. *. (b -. c))
 
+
+let rec print_list l =
+  match l with
+  | [] -> print_newline ()
+  | Node (a, b, c)::t -> print_float a; print_char ' '; print_list t
+  | Leaf (a, b)::t -> print_float b; print_char ' '; print_list t
 
 let huffman u =
   let rec combine_all l =
@@ -91,15 +115,16 @@ let huffman u =
     | _ as l ->
       let sorted = List.sort compare_tree l in
       let ht = combine_two (List.nth sorted 0) (List.nth sorted 1) in
+      let () = print_list l in
       let new_l = ht::(List.tl (List.tl sorted)) in
       combine_all new_l
   in
   let tree_set = init_tree_set u in
-  let sorted = List.sort compare_tree tree_set in
-  combine_all sorted
+  combine_all tree_set
+
 
 let _ =
   print_endline "description of the emitter :";
   print_emitter u;
   print_endline "Optimized coding tree for the emitter :";
-  pprint (huffman u) 0
+  pprint (huffman w) 0;
