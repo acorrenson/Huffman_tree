@@ -3,8 +3,13 @@
 (* -----------------------------------------------*)
 
 
-(* the description of an emitter u *)
-let u = [('a', 0.5); ('b', 0.2); ('c', 0.2); ('d', 0.1)]
+(* the description of 3 emitters u, v, w *)
+let u = [
+  ('a', 0.5);
+  ('b', 0.2);
+  ('c', 0.2);
+  ('d', 0.1)
+  ]
 let v = [
   (' ', 2.);
   ('e', 3.);
@@ -22,8 +27,6 @@ let w = [
   ('d', 0.15);
   ('e', 0.1);
 ]
-
-
 
 (* typedef for Huffman Tree *)
 type htree =
@@ -108,6 +111,7 @@ let rec print_list l =
   | Node (a, b, c)::t -> print_float a; print_char ' '; print_list t
   | Leaf (a, b)::t -> print_float b; print_char ' '; print_list t
 
+
 let huffman u =
   let rec combine_all l =
     match l with
@@ -115,7 +119,6 @@ let huffman u =
     | _ as l ->
       let sorted = List.sort compare_tree l in
       let ht = combine_two (List.nth sorted 0) (List.nth sorted 1) in
-      let () = print_list l in
       let new_l = ht::(List.tl (List.tl sorted)) in
       combine_all new_l
   in
@@ -124,7 +127,15 @@ let huffman u =
 
 
 let _ =
-  print_endline "description of the emitter :";
+  print_endline "description of the emitter u:";
   print_emitter u;
-  print_endline "Optimized coding tree for the emitter :";
+  print_endline "description of the emitter v: (freq. are mutiplied by 14)";
+  print_emitter v;
+  print_endline "description of the emitter w:";
+  print_emitter w;
+  print_endline "Optimized coding tree for the emitter u:";
+  pprint (huffman u) 0;
+  print_endline "Optimized coding tree for the emitter v:";
+  pprint (huffman v) 0;
+  print_endline "Optimized coding tree for the emitter w:";
   pprint (huffman w) 0;
